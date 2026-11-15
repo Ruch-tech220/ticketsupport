@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการหมวดหมู่ตั๋ว</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#14212C; --ink-700:#2C4356; --slate-500:#5C7285; --slate-300:#9FAEBA;
+    --paper-50:#F5F7F9; --paper-0:#FFFFFF;
+    --stamp-600:#A9752B; --stamp-100:#F5EBDA;
+    --line-200:#E3E7EB;
+    --success-600:#2F7D5D; --success-100:#E3F1EA;
+    --danger-600:#B3402C; --danger-100:#F7E1DB;
+    --radius-sm:8px; --radius-md:12px;
+    --font-display:'Space Grotesk', sans-serif; --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font-body); color:var(--ink-900); background:var(--paper-50); }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:var(--font-body); }
+
+  .app-shell{ display:flex; min-height:100vh; }
+  .sidebar{ width:240px; flex-shrink:0; background:var(--ink-900); color:var(--paper-0); display:flex; flex-direction:column; padding:22px 0; }
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; padding:0 22px 22px; font-family:var(--font-display); font-weight:600; font-size:16px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:10px; }
+  .nav-group-label{ padding:16px 22px 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--slate-300); }
+  .nav-item{ display:flex; align-items:center; gap:12px; padding:10px 22px; font-size:13.5px; color:var(--slate-300); border-left:3px solid transparent; cursor:pointer; }
+  .nav-item.active{ color:var(--paper-0); background:rgba(255,255,255,.07); border-left-color:var(--stamp-600); }
+  .nav-badge{ margin-left:auto; background:var(--danger-600); color:var(--paper-0); font-size:10.5px; font-family:var(--font-mono); padding:1px 7px; border-radius:999px; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{ height:64px; background:var(--paper-0); border-bottom:1px solid var(--line-200); display:flex; align-items:center; padding:0 28px; flex-shrink:0; }
+  .breadcrumb{ font-size:13px; color:var(--slate-500); }
+  .breadcrumb b{ color:var(--ink-900); }
+
+  .content{ padding:28px 32px; flex:1; }
+  .page-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:22px; }
+  .page-title{ font-family:var(--font-display); font-size:23px; font-weight:600; margin:0 0 4px; }
+  .page-sub{ font-size:13.5px; color:var(--slate-500); margin:0; }
+  .btn-primary{ padding:11px 20px; background:var(--ink-900); color:var(--paper-0); border:none; border-radius:var(--radius-sm); font-size:13.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; }
+
+  .panel{ background:var(--paper-0); border:1px solid var(--line-200); border-radius:var(--radius-md); overflow:hidden; margin-bottom:22px; }
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line-200); }
+  .panel-title{ font-size:14.5px; font-weight:600; margin:0; }
+  .panel-sub{ font-size:12px; color:var(--slate-500); margin:2px 0 0; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{ text-align:left; padding:10px 20px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--slate-500); background:var(--paper-50); border-bottom:1px solid var(--line-200); font-weight:600; }
+  td{ padding:13px 20px; border-bottom:1px solid var(--line-200); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  tr:hover td{ background:var(--paper-50); }
+  .cat-name{ font-weight:600; display:flex; align-items:center; gap:8px; }
+  .dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .cat-desc{ font-size:12.5px; color:var(--slate-500); max-width:280px; }
+  .cat-count{ font-family:var(--font-mono); }
+
+  .badge{ display:inline-flex; align-items:center; font-size:11px; font-family:var(--font-mono); padding:3px 9px; border-radius:999px; font-weight:500; }
+  .badge-success{ background:var(--success-100); color:var(--success-600); }
+  .badge-danger{ background:var(--danger-100); color:var(--danger-600); }
+
+  .row-actions{ display:flex; gap:14px; }
+  .row-actions button{ background:none; border:none; cursor:pointer; color:var(--slate-500); display:flex; }
+  .row-actions button:hover{ color:var(--ink-900); }
+
+  .sla-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--line-200); }
+  .sla-row:last-child{ border-bottom:none; }
+  .sla-name{ display:flex; align-items:center; gap:10px; font-size:13.5px; font-weight:600; }
+  .sla-input{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--slate-500); }
+  .sla-input input{ width:64px; padding:7px 9px; border:1px solid var(--line-200); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:13px; text-align:center; }
+
+  @media (max-width:900px){ .sidebar{ display:none; } }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M3 9.5C3 8.12 4.12 7 5.5 7H20.5C21.88 7 23 8.12 23 9.5V10.5C21.34 10.5 20 11.84 20 13.5C20 15.16 21.34 16.5 23 16.5V17.5C23 18.88 21.88 20 20.5 20H5.5C4.12 20 3 18.88 3 17.5V16.5C4.66 16.5 6 15.16 6 13.5C6 11.84 4.66 10.5 3 10.5V9.5Z" stroke="#F5F7F9" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 7.5V19.5" stroke="#F5F7F9" stroke-width="1.4" stroke-dasharray="2.5 2.5"/></svg>
+      TicketHub
+    </div>
+    <div class="nav-group-label">ผู้ดูแลระบบ</div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="10" y="2" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/></svg>
+      ภาพรวม
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6 9l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      อนุมัติบัญชี
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6" r="2.5"/><path d="M2 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke-linecap="round"/><circle cx="13" cy="7" r="2"/><path d="M11.5 11c1.8.3 3 1.6 3 4" stroke-linecap="round"/></svg>
+      ผู้ใช้งาน
+    </div>
+    <div class="nav-item active">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2h5a2 2 0 012 2v5L8 17 2 11z" stroke-linejoin="round"/><circle cx="12" cy="6" r="1" fill="currentColor" stroke="none"/></svg>
+      หมวดหมู่ตั๋ว
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15V9M8 15V4M13 15v-7" stroke-linecap="round"/></svg>
+      รายงาน
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="2.3"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2M4.2 4.2l1.4 1.4M12.4 12.4l1.4 1.4M4.2 13.8l1.4-1.4M12.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>
+      ตั้งค่าระบบ
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar"><span class="breadcrumb"><b>จัดการหมวดหมู่ตั๋ว</b></span></div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">จัดการหมวดหมู่ตั๋ว</h1>
+          <p class="page-sub">กำหนดหมวดหมู่ปัญหาและทีมที่รับผิดชอบสำหรับการจัดเส้นทางตั๋วอัตโนมัติ</p>
+        </div>
+        <button class="btn-primary">
+          <svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v12M3 9h12" stroke-linecap="round"/></svg>
+          เพิ่มหมวดหมู่
+        </button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 class="panel-title">หมวดหมู่ทั้งหมด</h2></div>
+        <table>
+          <thead><tr><th>หมวดหมู่</th><th>คำอธิบาย</th><th>ทีมที่รับผิดชอบ</th><th>จำนวนตั๋ว</th><th>สถานะ</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="cat-name"><span class="dot" style="background:#1D5C8A"></span>บัญชีผู้ใช้งาน / การเข้าสู่ระบบ</div></td>
+              <td class="cat-desc">ปัญหาการเข้าสู่ระบบ รีเซ็ตรหัสผ่าน SSO และสิทธิ์การเข้าถึง</td>
+              <td>ฝ่ายสนับสนุนระดับ 1</td>
+              <td class="cat-count">156</td>
+              <td><span class="badge badge-success">เปิดใช้งาน</span></td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="cat-name"><span class="dot" style="background:#A9752B"></span>ฮาร์ดแวร์ / อุปกรณ์</div></td>
+              <td class="cat-desc">คอมพิวเตอร์ เครื่องพิมพ์ อุปกรณ์ต่อพ่วงชำรุดหรือใช้งานไม่ได้</td>
+              <td>ฝ่ายสนับสนุนระดับ 1</td>
+              <td class="cat-count">98</td>
+              <td><span class="badge badge-success">เปิดใช้งาน</span></td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="cat-name"><span class="dot" style="background:#2F7D5D"></span>ซอฟต์แวร์ / ระบบภายใน</div></td>
+              <td class="cat-desc">ปัญหาการใช้งานโปรแกรมภายในองค์กร เช่น ระบบบัญชี ระบบ HR</td>
+              <td>ฝ่ายสนับสนุนระดับ 2</td>
+              <td class="cat-count">142</td>
+              <td><span class="badge badge-success">เปิดใช้งาน</span></td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="cat-name"><span class="dot" style="background:#B3402C"></span>เครือข่าย / อินเทอร์เน็ต</div></td>
+              <td class="cat-desc">Wi-Fi ขัดข้อง VPN หลุด อินเทอร์เน็ตช้าหรือใช้งานไม่ได้</td>
+              <td>ฝ่ายสนับสนุนระดับ 2</td>
+              <td class="cat-count">64</td>
+              <td><span class="badge badge-success">เปิดใช้งาน</span></td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="cat-name"><span class="dot" style="background:#9FAEBA"></span>อื่นๆ</div></td>
+              <td class="cat-desc">คำร้องหรือคำถามทั่วไปที่ไม่เข้าหมวดหมู่ข้างต้น</td>
+              <td>ฝ่ายสนับสนุนระดับ 1</td>
+              <td class="cat-count">22</td>
+              <td><span class="badge badge-danger">ปิดใช้งาน</span></td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">ระดับความสำคัญ &amp; เวลาตอบกลับ (SLA)</h2>
+            <p class="panel-sub">กำหนดเวลาตอบกลับสูงสุดสำหรับแต่ละระดับความสำคัญ</p>
+          </div>
+        </div>
+        <div class="sla-row">
+          <div class="sla-name"><span class="badge badge-danger">สูง</span></div>
+          <div class="sla-input">ตอบกลับภายใน <input type="text" value="1"> ชั่วโมง</div>
+        </div>
+        <div class="sla-row">
+          <div class="sla-name"><span class="badge" style="background:var(--stamp-100); color:var(--stamp-600);">กลาง</span></div>
+          <div class="sla-input">ตอบกลับภายใน <input type="text" value="4"> ชั่วโมง</div>
+        </div>
+        <div class="sla-row">
+          <div class="sla-name"><span class="badge" style="background:var(--line-200); color:var(--slate-500);">ต่ำ</span></div>
+          <div class="sla-input">ตอบกลับภายใน <input type="text" value="24"> ชั่วโมง</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

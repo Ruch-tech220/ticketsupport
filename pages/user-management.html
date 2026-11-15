@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการผู้ใช้งาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#14212C; --ink-700:#2C4356; --slate-500:#5C7285; --slate-300:#9FAEBA;
+    --paper-50:#F5F7F9; --paper-0:#FFFFFF;
+    --stamp-600:#A9752B; --stamp-100:#F5EBDA;
+    --line-200:#E3E7EB;
+    --success-600:#2F7D5D; --success-100:#E3F1EA;
+    --info-600:#1D5C8A; --info-100:#E1EEF5;
+    --danger-600:#B3402C; --danger-100:#F7E1DB;
+    --radius-sm:8px; --radius-md:12px;
+    --font-display:'Space Grotesk', sans-serif; --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font-body); color:var(--ink-900); background:var(--paper-50); }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:var(--font-body); }
+
+  .app-shell{ display:flex; min-height:100vh; }
+  .sidebar{ width:240px; flex-shrink:0; background:var(--ink-900); color:var(--paper-0); display:flex; flex-direction:column; padding:22px 0; }
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; padding:0 22px 22px; font-family:var(--font-display); font-weight:600; font-size:16px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:10px; }
+  .nav-group-label{ padding:16px 22px 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--slate-300); }
+  .nav-item{ display:flex; align-items:center; gap:12px; padding:10px 22px; font-size:13.5px; color:var(--slate-300); border-left:3px solid transparent; cursor:pointer; }
+  .nav-item svg{ flex-shrink:0; }
+  .nav-item.active{ color:var(--paper-0); background:rgba(255,255,255,.07); border-left-color:var(--stamp-600); }
+  .nav-badge{ margin-left:auto; background:var(--danger-600); color:var(--paper-0); font-size:10.5px; font-family:var(--font-mono); padding:1px 7px; border-radius:999px; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{ height:64px; background:var(--paper-0); border-bottom:1px solid var(--line-200); display:flex; align-items:center; padding:0 28px; flex-shrink:0; }
+  .breadcrumb{ font-size:13px; color:var(--slate-500); }
+  .breadcrumb b{ color:var(--ink-900); }
+
+  .content{ padding:28px 32px; flex:1; }
+  .page-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:22px; }
+  .page-title{ font-family:var(--font-display); font-size:23px; font-weight:600; margin:0 0 4px; }
+  .page-sub{ font-size:13.5px; color:var(--slate-500); margin:0; }
+  .btn-primary{ padding:11px 20px; background:var(--ink-900); color:var(--paper-0); border:none; border-radius:var(--radius-sm); font-size:13.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .btn-primary:hover{ background:var(--ink-700); }
+
+  .panel{ background:var(--paper-0); border:1px solid var(--line-200); border-radius:var(--radius-md); overflow:hidden; }
+  .toolbar{ display:flex; gap:10px; padding:16px 20px; border-bottom:1px solid var(--line-200); flex-wrap:wrap; }
+  .search-box{ display:flex; align-items:center; gap:8px; background:var(--paper-50); border:1px solid var(--line-200); border-radius:var(--radius-sm); padding:8px 12px; flex:1; min-width:200px; color:var(--slate-500); }
+  .search-box input{ border:none; background:none; outline:none; font-size:13.5px; width:100%; color:var(--ink-900); }
+  .select-filter{ font-size:13px; padding:8px 12px; border:1px solid var(--line-200); border-radius:var(--radius-sm); background:var(--paper-0); color:var(--ink-900); }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{ text-align:left; padding:10px 20px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--slate-500); background:var(--paper-50); border-bottom:1px solid var(--line-200); font-weight:600; }
+  td{ padding:13px 20px; border-bottom:1px solid var(--line-200); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  tr:hover td{ background:var(--paper-50); }
+
+  .user-cell{ display:flex; align-items:center; gap:10px; }
+  .avatar-sm{ width:30px; height:30px; border-radius:50%; background:var(--ink-700); color:var(--paper-0); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; font-family:var(--font-display); flex-shrink:0; }
+  .user-name{ font-weight:500; }
+  .user-email{ font-size:11.5px; color:var(--slate-500); font-family:var(--font-mono); }
+
+  .badge{ display:inline-flex; align-items:center; font-size:11px; font-family:var(--font-mono); padding:3px 9px; border-radius:999px; font-weight:500; white-space:nowrap; }
+  .badge-purple{ background:#EDE7F6; color:#5E4B8B; }
+  .badge-info{ background:var(--info-100); color:var(--info-600); }
+  .badge-neutral{ background:var(--line-200); color:var(--slate-500); }
+  .badge-success{ background:var(--success-100); color:var(--success-600); }
+  .badge-danger{ background:var(--danger-100); color:var(--danger-600); }
+
+  .row-actions{ display:flex; gap:14px; }
+  .row-actions button{ background:none; border:none; cursor:pointer; color:var(--slate-500); display:flex; }
+  .row-actions button:hover{ color:var(--ink-900); }
+
+  .pager{ display:flex; align-items:center; justify-content:space-between; padding:14px 20px; font-size:12.5px; color:var(--slate-500); }
+  .pager-btns{ display:flex; gap:6px; }
+  .pager-btns button{ width:28px; height:28px; border:1px solid var(--line-200); background:var(--paper-0); border-radius:var(--radius-sm); cursor:pointer; font-size:12px; color:var(--slate-500); }
+  .pager-btns button.active{ background:var(--ink-900); color:var(--paper-0); border-color:var(--ink-900); }
+
+  @media (max-width:900px){ .sidebar{ display:none; } }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M3 9.5C3 8.12 4.12 7 5.5 7H20.5C21.88 7 23 8.12 23 9.5V10.5C21.34 10.5 20 11.84 20 13.5C20 15.16 21.34 16.5 23 16.5V17.5C23 18.88 21.88 20 20.5 20H5.5C4.12 20 3 18.88 3 17.5V16.5C4.66 16.5 6 15.16 6 13.5C6 11.84 4.66 10.5 3 10.5V9.5Z" stroke="#F5F7F9" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 7.5V19.5" stroke="#F5F7F9" stroke-width="1.4" stroke-dasharray="2.5 2.5"/></svg>
+      TicketHub
+    </div>
+    <div class="nav-group-label">ผู้ดูแลระบบ</div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="10" y="2" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/></svg>
+      ภาพรวม
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6 9l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      อนุมัติบัญชี
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item active">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6" r="2.5"/><path d="M2 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke-linecap="round"/><circle cx="13" cy="7" r="2"/><path d="M11.5 11c1.8.3 3 1.6 3 4" stroke-linecap="round"/></svg>
+      ผู้ใช้งาน
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2h5a2 2 0 012 2v5L8 17 2 11z" stroke-linejoin="round"/><circle cx="12" cy="6" r="1" fill="currentColor" stroke="none"/></svg>
+      หมวดหมู่ตั๋ว
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15V9M8 15V4M13 15v-7" stroke-linecap="round"/></svg>
+      รายงาน
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="2.3"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2M4.2 4.2l1.4 1.4M12.4 12.4l1.4 1.4M4.2 13.8l1.4-1.4M12.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>
+      ตั้งค่าระบบ
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar"><span class="breadcrumb"><b>จัดการผู้ใช้งาน</b></span></div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">จัดการผู้ใช้งาน</h1>
+          <p class="page-sub">รายชื่อผู้ใช้งานทั้งหมดในระบบ ทั้งผู้ดูแลระบบ เจ้าหน้าที่ และผู้แจ้งปัญหา</p>
+        </div>
+        <button class="btn-primary">
+          <svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v12M3 9h12" stroke-linecap="round"/></svg>
+          เพิ่มผู้ใช้งาน
+        </button>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.5" cy="7.5" r="5"/><path d="M11.5 11.5L16 16" stroke-linecap="round"/></svg>
+            <input type="text" placeholder="ค้นหาชื่อหรืออีเมล...">
+          </div>
+          <select class="select-filter">
+            <option>ทุกบทบาท</option>
+            <option>ผู้ดูแลระบบ</option>
+            <option>เจ้าหน้าที่</option>
+            <option>ผู้แจ้งปัญหา</option>
+          </select>
+          <select class="select-filter">
+            <option>ทุกสถานะ</option>
+            <option>ใช้งานอยู่</option>
+            <option>ปิดใช้งาน</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>ผู้ใช้งาน</th><th>บทบาท</th><th>แผนก</th><th>สถานะ</th><th>เข้าร่วมเมื่อ</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="user-cell"><div class="avatar-sm">AD</div><div><div class="user-name">อดิศักดิ์ คงสุข</div><div class="user-email">adisak@organization.com</div></div></div></td>
+              <td><span class="badge badge-purple">ผู้ดูแลระบบ</span></td>
+              <td>ฝ่ายไอที</td>
+              <td><span class="badge badge-success">ใช้งานอยู่</span></td>
+              <td>2 ม.ค. 2568</td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+                <button aria-label="ปิดใช้งาน"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6.5 6.5l5 5" stroke-linecap="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="user-cell"><div class="avatar-sm">PV</div><div><div class="user-name">ปวีณา สุวรรณ</div><div class="user-email">paweena@organization.com</div></div></div></td>
+              <td><span class="badge badge-info">เจ้าหน้าที่</span></td>
+              <td>ฝ่ายสนับสนุนระดับ 2</td>
+              <td><span class="badge badge-success">ใช้งานอยู่</span></td>
+              <td>15 มี.ค. 2568</td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+                <button aria-label="ปิดใช้งาน"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6.5 6.5l5 5" stroke-linecap="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="user-cell"><div class="avatar-sm">ธว</div><div><div class="user-name">ธนกร วัฒนกิจ</div><div class="user-email">thanakorn@organization.com</div></div></div></td>
+              <td><span class="badge badge-info">เจ้าหน้าที่</span></td>
+              <td>ฝ่ายสนับสนุนระดับ 1</td>
+              <td><span class="badge badge-success">ใช้งานอยู่</span></td>
+              <td>2 มิ.ย. 2568</td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+                <button aria-label="ปิดใช้งาน"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6.5 6.5l5 5" stroke-linecap="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="user-cell"><div class="avatar-sm">มก</div><div><div class="user-name">มณีรัตน์ กิจเจริญ</div><div class="user-email">maneerat@organization.com</div></div></div></td>
+              <td><span class="badge badge-neutral">ผู้แจ้งปัญหา</span></td>
+              <td>ฝ่ายขาย</td>
+              <td><span class="badge badge-success">ใช้งานอยู่</span></td>
+              <td>20 ก.ค. 2569</td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+                <button aria-label="ปิดใช้งาน"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6.5 6.5l5 5" stroke-linecap="round"/></svg></button>
+              </div></td>
+            </tr>
+            <tr>
+              <td><div class="user-cell"><div class="avatar-sm">สจ</div><div><div class="user-name">สุพจน์ ทองดี</div><div class="user-email">supot@organization.com</div></div></div></td>
+              <td><span class="badge badge-neutral">ผู้แจ้งปัญหา</span></td>
+              <td>ฝ่ายผลิต</td>
+              <td><span class="badge badge-danger">ปิดใช้งาน</span></td>
+              <td>10 ก.พ. 2568</td>
+              <td><div class="row-actions">
+                <button aria-label="แก้ไข"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5l4 4L6 16H2v-4z" stroke-linejoin="round"/></svg></button>
+                <button aria-label="เปิดใช้งาน"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6.5 9l1.8 1.8L11.5 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pager">
+          <span>แสดง 1–5 จาก 128 รายการ</span>
+          <div class="pager-btns">
+            <button>‹</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

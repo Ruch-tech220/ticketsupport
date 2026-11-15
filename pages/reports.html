@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงาน / สถิติ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#14212C; --ink-700:#2C4356; --slate-500:#5C7285; --slate-300:#9FAEBA;
+    --paper-50:#F5F7F9; --paper-0:#FFFFFF;
+    --stamp-600:#A9752B; --stamp-100:#F5EBDA;
+    --line-200:#E3E7EB;
+    --success-600:#2F7D5D; --success-100:#E3F1EA;
+    --danger-600:#B3402C;
+    --radius-sm:8px; --radius-md:12px;
+    --font-display:'Space Grotesk', sans-serif; --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font-body); color:var(--ink-900); background:var(--paper-50); }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:var(--font-body); }
+
+  .app-shell{ display:flex; min-height:100vh; }
+  .sidebar{ width:240px; flex-shrink:0; background:var(--ink-900); color:var(--paper-0); display:flex; flex-direction:column; padding:22px 0; }
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; padding:0 22px 22px; font-family:var(--font-display); font-weight:600; font-size:16px; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:10px; }
+  .nav-group-label{ padding:16px 22px 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--slate-300); }
+  .nav-item{ display:flex; align-items:center; gap:12px; padding:10px 22px; font-size:13.5px; color:var(--slate-300); border-left:3px solid transparent; cursor:pointer; }
+  .nav-item.active{ color:var(--paper-0); background:rgba(255,255,255,.07); border-left-color:var(--stamp-600); }
+  .nav-badge{ margin-left:auto; background:var(--danger-600); color:var(--paper-0); font-size:10.5px; font-family:var(--font-mono); padding:1px 7px; border-radius:999px; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{ height:64px; background:var(--paper-0); border-bottom:1px solid var(--line-200); display:flex; align-items:center; padding:0 28px; flex-shrink:0; }
+  .breadcrumb{ font-size:13px; color:var(--slate-500); }
+  .breadcrumb b{ color:var(--ink-900); }
+
+  .content{ padding:28px 32px; flex:1; }
+  .page-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:22px; }
+  .page-title{ font-family:var(--font-display); font-size:23px; font-weight:600; margin:0 0 4px; }
+  .page-sub{ font-size:13.5px; color:var(--slate-500); margin:0; }
+  .head-actions{ display:flex; gap:10px; }
+  .select-filter{ font-size:13px; padding:9px 12px; border:1px solid var(--line-200); border-radius:var(--radius-sm); background:var(--paper-0); color:var(--ink-900); }
+  .btn-outline{ padding:9px 16px; background:var(--paper-0); border:1px solid var(--line-200); border-radius:var(--radius-sm); font-size:13px; font-weight:600; color:var(--ink-900); cursor:pointer; display:flex; align-items:center; gap:7px; }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:22px; }
+  .stat-card{ background:var(--paper-0); border:1px solid var(--line-200); border-radius:var(--radius-md); padding:18px 20px; }
+  .stat-label{ font-size:12px; color:var(--slate-500); margin-bottom:10px; }
+  .stat-value{ font-family:var(--font-display); font-size:27px; font-weight:600; }
+  .stat-note{ font-size:11.5px; color:var(--success-600); margin-top:6px; }
+
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; align-items:start; }
+  .panel{ background:var(--paper-0); border:1px solid var(--line-200); border-radius:var(--radius-md); overflow:hidden; }
+  .panel-head{ padding:16px 20px; border-bottom:1px solid var(--line-200); }
+  .panel-title{ font-size:14.5px; font-weight:600; margin:0; }
+
+  /* Horizontal bars */
+  .bar-h-row{ display:flex; align-items:center; gap:12px; padding:12px 20px; }
+  .bar-h-label{ width:180px; font-size:12.5px; flex-shrink:0; }
+  .bar-h-track{ flex:1; background:var(--paper-50); border-radius:6px; height:10px; overflow:hidden; }
+  .bar-h-fill{ height:100%; border-radius:6px; background:var(--ink-700); }
+  .bar-h-value{ width:36px; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--slate-500); flex-shrink:0; }
+
+  /* Vertical bars */
+  .bar-v-chart{ display:flex; align-items:flex-end; gap:14px; height:160px; padding:20px 24px 8px; }
+  .bar-v-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
+  .bar-v-num{ font-size:11px; color:var(--slate-500); font-family:var(--font-mono); }
+  .bar-v-bar{ width:100%; max-width:34px; background:var(--ink-700); border-radius:6px 6px 0 0; }
+  .bar-v-label{ font-size:11px; color:var(--slate-500); margin-top:2px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{ text-align:left; padding:10px 20px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--slate-500); background:var(--paper-50); border-bottom:1px solid var(--line-200); font-weight:600; }
+  td{ padding:12px 20px; border-bottom:1px solid var(--line-200); }
+  tr:last-child td{ border-bottom:none; }
+  .agent-cell{ display:flex; align-items:center; gap:10px; font-weight:500; }
+  .avatar-sm{ width:28px; height:28px; border-radius:50%; background:var(--ink-700); color:var(--paper-0); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; font-family:var(--font-display); flex-shrink:0; }
+
+  @media (max-width:1100px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } .grid-2{ grid-template-columns:1fr; } }
+  @media (max-width:900px){ .sidebar{ display:none; } }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M3 9.5C3 8.12 4.12 7 5.5 7H20.5C21.88 7 23 8.12 23 9.5V10.5C21.34 10.5 20 11.84 20 13.5C20 15.16 21.34 16.5 23 16.5V17.5C23 18.88 21.88 20 20.5 20H5.5C4.12 20 3 18.88 3 17.5V16.5C4.66 16.5 6 15.16 6 13.5C6 11.84 4.66 10.5 3 10.5V9.5Z" stroke="#F5F7F9" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 7.5V19.5" stroke="#F5F7F9" stroke-width="1.4" stroke-dasharray="2.5 2.5"/></svg>
+      TicketHub
+    </div>
+    <div class="nav-group-label">ผู้ดูแลระบบ</div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="10" y="2" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/></svg>
+      ภาพรวม
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M6 9l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      อนุมัติบัญชี
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6" r="2.5"/><path d="M2 15c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke-linecap="round"/><circle cx="13" cy="7" r="2"/><path d="M11.5 11c1.8.3 3 1.6 3 4" stroke-linecap="round"/></svg>
+      ผู้ใช้งาน
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2h5a2 2 0 012 2v5L8 17 2 11z" stroke-linejoin="round"/><circle cx="12" cy="6" r="1" fill="currentColor" stroke="none"/></svg>
+      หมวดหมู่ตั๋ว
+    </div>
+    <div class="nav-item active">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15V9M8 15V4M13 15v-7" stroke-linecap="round"/></svg>
+      รายงาน
+    </div>
+    <div class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="2.3"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2M4.2 4.2l1.4 1.4M12.4 12.4l1.4 1.4M4.2 13.8l1.4-1.4M12.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>
+      ตั้งค่าระบบ
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar"><span class="breadcrumb"><b>รายงาน / สถิติ</b></span></div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">รายงาน / สถิติ</h1>
+          <p class="page-sub">ภาพรวมประสิทธิภาพการให้บริการของทีมสนับสนุน</p>
+        </div>
+        <div class="head-actions">
+          <select class="select-filter">
+            <option>7 วันที่ผ่านมา</option>
+            <option>30 วันที่ผ่านมา</option>
+            <option>ไตรมาสนี้</option>
+          </select>
+          <button class="btn-outline">
+            <svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 17V6M8 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 13 11)"/><path d="M5 17v3a1 1 0 001 1h14a1 1 0 001-1v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            ส่งออกรายงาน
+          </button>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">ตั๋วที่ปิดแล้ว</div><div class="stat-value">414</div><div class="stat-note">+6% จากสัปดาห์ก่อน</div></div>
+        <div class="stat-card"><div class="stat-label">เวลาตอบกลับเฉลี่ย</div><div class="stat-value">2.4 ชม.</div><div class="stat-note">ดีขึ้น 8%</div></div>
+        <div class="stat-card"><div class="stat-label">เวลาแก้ไขเฉลี่ย</div><div class="stat-value">1.2 วัน</div><div class="stat-note">ดีขึ้น 3%</div></div>
+        <div class="stat-card"><div class="stat-label">คะแนนความพึงพอใจ</div><div class="stat-value">4.6 / 5</div><div class="stat-note">จาก 268 รีวิว</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><h2 class="panel-title">ตั๋วตามหมวดหมู่</h2></div>
+          <div class="bar-h-row"><span class="bar-h-label">บัญชีผู้ใช้งาน / เข้าสู่ระบบ</span><div class="bar-h-track"><div class="bar-h-fill" style="width:100%"></div></div><span class="bar-h-value">156</span></div>
+          <div class="bar-h-row"><span class="bar-h-label">ซอฟต์แวร์ / ระบบภายใน</span><div class="bar-h-track"><div class="bar-h-fill" style="width:91%"></div></div><span class="bar-h-value">142</span></div>
+          <div class="bar-h-row"><span class="bar-h-label">ฮาร์ดแวร์ / อุปกรณ์</span><div class="bar-h-track"><div class="bar-h-fill" style="width:63%"></div></div><span class="bar-h-value">98</span></div>
+          <div class="bar-h-row"><span class="bar-h-label">เครือข่าย / อินเทอร์เน็ต</span><div class="bar-h-track"><div class="bar-h-fill" style="width:41%"></div></div><span class="bar-h-value">64</span></div>
+          <div class="bar-h-row"><span class="bar-h-label">อื่นๆ</span><div class="bar-h-track"><div class="bar-h-fill" style="width:14%"></div></div><span class="bar-h-value">22</span></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2 class="panel-title">จำนวนตั๋วรายวัน (7 วันล่าสุด)</h2></div>
+          <div class="bar-v-chart">
+            <div class="bar-v-col"><span class="bar-v-num">58</span><div class="bar-v-bar" style="height:41%"></div><span class="bar-v-label">จ.</span></div>
+            <div class="bar-v-col"><span class="bar-v-num">64</span><div class="bar-v-bar" style="height:46%"></div><span class="bar-v-label">อ.</span></div>
+            <div class="bar-v-col"><span class="bar-v-num">71</span><div class="bar-v-bar" style="height:51%"></div><span class="bar-v-label">พ.</span></div>
+            <div class="bar-v-col"><span class="bar-v-num">66</span><div class="bar-v-bar" style="height:47%"></div><span class="bar-v-label">พฤ.</span></div>
+            <div class="bar-v-col"><span class="bar-v-num">80</span><div class="bar-v-bar" style="height:58%; background:var(--ink-900);"></div><span class="bar-v-label">ศ.</span></div>
+            <div class="bar-v-col"><span class="bar-v-num">45</span><div class="bar-v-bar" style="height:32%"></div><span class="bar-v-label">ส.</span></div>
+            <div class="bar-v-col"><span class="bar-v-num">30</span><div class="bar-v-bar" style="height:21%"></div><span class="bar-v-label">อา.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 class="panel-title">ผลงานเจ้าหน้าที่</h2></div>
+        <table>
+          <thead><tr><th>เจ้าหน้าที่</th><th>ตั๋วที่แก้ไขแล้ว</th><th>เวลาตอบกลับเฉลี่ย</th><th>คะแนนความพึงพอใจ</th></tr></thead>
+          <tbody>
+            <tr><td><div class="agent-cell"><div class="avatar-sm">PV</div>ปวีณา สุวรรณ</div></td><td>168</td><td>1.9 ชม.</td><td>4.8 / 5</td></tr>
+            <tr><td><div class="agent-cell"><div class="avatar-sm">ธว</div>ธนกร วัฒนกิจ</div></td><td>142</td><td>2.6 ชม.</td><td>4.5 / 5</td></tr>
+            <tr><td><div class="agent-cell"><div class="avatar-sm">กจ</div>กิตติ จันทร์แจ่ม</div></td><td>104</td><td>3.1 ชม.</td><td>4.3 / 5</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
